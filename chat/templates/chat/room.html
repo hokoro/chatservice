@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Room</title>
+</head>
+<body>
+    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <input id="chat-message-input" type="text" size="100"><br>
+    <input id="chat-message-submit" type="button" value="Send">
+    {{ room_name|json_script:"room-name" }}
+
+    <script>
+        //json 객체 생성
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        //WebSocket 생성 = 서로 양방향 통신을 하기 위한 통신 센서 을 열수 있게 하는 고급 기술이다
+        const chatSocket = new WebSocket(
+            'ws://'
+            +window.location.host //URL의 호스트 부분을 값으로 하는 DOMString으로, 호스트명, ':', 포트 번호를 포함합니다.
+            +'/ws/chat/'
+            +roomName
+            +'/'
+        );
+
+        //onmessage 메세지가 웹으로 수신 될때 마다 호출 되는 이벤트 핸들러 이다.
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.querySelector('#chat-log').value += (data.message + '\n');
+        };
+
+        //socket 이 닫히면 error log 출력
+        chatSocket.onclose = function(e){
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        //해당 쿼리의 포커스를 맞춘후
+        document.querySelector('#chat-message-input').focus();
+        //onkeyup 사용자가 이전 누를키를 떌떄 이벤트 발생
+        document.querySelector('#chat-message-input').onkeyup = function(e){
+          if(e.keyCode===13){
+              document.querySelector('#chat-message-submit').click();
+          }
+        };
+
+        //message 버튼이 클릭 되었을떄 즉 message send
+        document.querySelector('#chat-message-submit').onclick = function(e){
+          const messageInputDom = document.querySelector('#chat-message-input');
+          const message = messageInputDom.value;
+          chatSocket.send(JSON.stringify({
+            'message':message
+          }));
+          messageInputDom.value = '';
+        };
+    </script>
+
+</body>
+</html>
