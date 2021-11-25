@@ -9,19 +9,31 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.urls import reverse_lazy
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env_list = dict()
+local_env = open(os.path.join(BASE_DIR,".env"))
+
+while True:
+    line = local_env.readline() #env 파일에서 한줄씩 읽어오고
+    if not line: #line 이 끝나면 종료
+        break
+    start = line.find('=') # '=' 처음 나오는 문자의 인덱스 찾기
+    key = line[:start] # = 이전에는 key
+    value = line[start+1:] # = 이후에는 value
+    env_list[key] = value #dict 로 만들기
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g%e6)1z$-q()b-@=ir^#_#7_u(wby$725a+5=$_p7ekc6-12kz'
-
-# SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY = env_list['SECRET_KEY']
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -113,14 +125,29 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
+STATIC_URL = '/static/' #static 관련 url 이 들어왔을떄 경로를 설정한다.
 
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles') #basedir 로 가서 staticfiles 라는 폴더를 정적 루트로 사용한다.
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    #프로 젝트 폴더에서 static 폴더를 찾아서 전체 프로젝트 에 적용하여 인식한다.
+    #static 이라는 css 정적 파일을 찾기 위해서
+
+]
+
+MEDIA_URL = '/media/' #static 관련 url 이 들어왔을떄 경로를 설정한다.
+
+MEDIA_ROOT = os.path.join(BASE_DIR,'media') #profile app 부터는 이미지를 업로드 받기 때문에 지정해줘야 한다
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+#login redirect 경로
 
+
+
+#LOGIN_REDIRECT_URL = reverse_lazy('accountapp:hello_world') #로그인을 했을시 재연결 시킬
+#LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login') #로그아웃 시킬시 재연결
